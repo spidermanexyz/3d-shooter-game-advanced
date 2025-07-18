@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced 3D Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            overflow: hidden;
+            color: white;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #gameCanvas {
+            display: block;
+            cursor: none;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 20px;
+            pointer-events: none;
+        }
+
+        .hud-element {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        #crosshair::before {
+            width: 2px;
+            height: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #crosshair::after {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #weaponCustomization {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 30px;
+            min-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            pointer-events: all;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+        }
+
+        #weaponCustomization h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .customization-section {
+            margin-bottom: 25px;
+        }
+
+        .customization-section h3 {
+            margin-bottom: 10px;
+            color: #ffffff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .custom-button {
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            border: 2px solid #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .custom-button:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .custom-button.active {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            color: black;
+            font-weight: bold;
+        }
+
+        .weapon-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        .stat-fill {
+            height: 8px;
+            background: linear-gradient(90deg, #ff4444, #ffff44, #44ff44);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        #startMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: all;
+            z-index: 1000;
+        }
+
+        #startMenu h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        #startMenu p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ccc;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        #startButton {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: none;
+            color: black;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        #startButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 255, 255, 0.3);
+            border-top: 4px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #00ffff;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="loadingScreen">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Advanced 3D Shooter...</div>
+        </div>
+
+        <div id="startMenu" style="display: none;">
+            <h1>ADVANCED 3D SHOOTER</h1>
+            <p>Experience the ultimate first-person shooter with customizable weapons, attachments, and skins. Battle intelligent AI enemies in a fully immersive 3D environment.</p>
+            <button id="startButton">START GAME</button>
+            <div id="instructions">
+                <p><strong>Controls:</strong> WASD - Move | Mouse - Look | Left Click - Shoot | R - Reload | Tab - Customize Weapons</p>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" style="display: none;"></canvas>
+        
+        <div id="ui" style="display: none;">
+            <div id="crosshair"></div>
+            
+            <div id="hud">
+                <div class="hud-element">
+                    <div>Health: <span id="healthDisplay">100</span></div>
+                </div>
+                <div class="hud-element">
+                    <div>Ammo: <span id="ammoDisplay">30/90</span></div>
+                </div>
+                <div class="hud-element">
+                    <div>Weapon: <span id="weaponDisplay">Assault Rifle</span></div>
+                </div>
+                <div class="hud-element">
+                    <div>Enemies: <span id="enemyCount">5</span></div>
+                </div>
+            </div>
+
+            <div id="weaponCustomization">
+                <h2>🔫 WEAPON CUSTOMIZATION</h2>
+                
+                <div class="customization-section">
+                    <h3>Weapon Type</h3>
+                    <div class="button-grid">
+                        <button class="custom-button active" data-weapon="assault">Assault Rifle</button>
+                        <button class="custom-button" data-weapon="sniper">Sniper Rifle</button>
+                        <button class="custom-button" data-weapon="shotgun">Shotgun</button>
+                    </div>
+                </div>
+
+                <div class="customization-section">
+                    <h3>Attachments</h3>
+                    <div class="button-grid">
+                        <button class="custom-button" data-attachment="scope">Scope (+Accuracy)</button>
+                        <button class="custom-button" data-attachment="silencer">Silencer (+Stealth)</button>
+                        <button class="custom-button" data-attachment="grip">Grip (-Recoil)</button>
+                        <button class="custom-button" data-attachment="laser">Laser (+Precision)</button>
+                        <button class="custom-button" data-attachment="flashlight">Flashlight (+Vision)</button>
+                        <button class="custom-button" data-attachment="bipod">Bipod (+Stability)</button>
+                    </div>
+                </div>
+
+                <div class="customization-section">
+                    <h3>Weapon Skins</h3>
+                    <div class="button-grid">
+                        <button class="custom-button active" data-skin="default">Default</button>
+                        <button class="custom-button" data-skin="camo">Camo</button>
+                        <button class="custom-button" data-skin="gold">Gold</button>
+                        <button class="custom-button" data-skin="neon">Neon</button>
+                        <button class="custom-button" data-skin="carbon">Carbon Fiber</button>
+                        <button class="custom-button" data-skin="chrome">Chrome</button>
+                    </div>
+                </div>
+
+                <div class="weapon-stats">
+                    <div class="stat-bar">
+                        <div class="stat-label">Damage</div>
+                        <div class="stat-fill" id="damageStat" style="width: 70%"></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-fill" id="accuracyStat" style="width: 60%"></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Fire Rate</div>
+                        <div class="stat-fill" id="fireRateStat" style="width: 80%"></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Range</div>
+                        <div class="stat-fill" id="rangeStat" style="width: 65%"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="custom-button" onclick="toggleWeaponCustomization()">Close (Tab)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
