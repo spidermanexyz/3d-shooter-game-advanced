@@ -400,7 +400,62 @@ export class GameEngine {
     
     gameOver() {
         this.isRunning = false;
-        alert(`Game Over! Final Score: ${this.score}`);
-        location.reload();
+        
+        // Create game over screen
+        const gameOverScreen = document.createElement('div');
+        gameOverScreen.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+        `;
+        
+        gameOverScreen.innerHTML = `
+            <h1 style="font-size: 4rem; margin-bottom: 20px; color: #ff0000;">GAME OVER</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 10px;">Final Score: ${this.score}</p>
+            <p style="font-size: 1.2rem; margin-bottom: 30px; color: #ccc;">You survived ${Math.floor(Date.now() / 1000 - this.startTime)} seconds</p>
+            <div style="display: flex; gap: 20px;">
+                <button onclick="location.reload()" style="
+                    background: linear-gradient(45deg, #00ffff, #0080ff);
+                    border: none;
+                    color: black;
+                    padding: 15px 30px;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    border-radius: 10px;
+                    cursor: pointer;
+                ">Play Again</button>
+                <button onclick="returnToLobby(); this.parentElement.parentElement.remove();" style="
+                    background: linear-gradient(45deg, #666, #888);
+                    border: none;
+                    color: white;
+                    padding: 15px 30px;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    border-radius: 10px;
+                    cursor: pointer;
+                ">Return to Lobby</button>
+            </div>
+        `;
+        
+        document.body.appendChild(gameOverScreen);
+    }
+    
+    stop() {
+        this.isRunning = false;
+        this.isPaused = false;
+        
+        // Clean up
+        if (this.scene) {
+            this.particleSystem.clear();
+        }
     }
 }
